@@ -32,7 +32,6 @@
             </b-button>
           </div>
         </div>
-        <div>asd</div>
         <div
           class="columns is-multiline is-mobile"
           v-if="metaTabActive == 'address'"
@@ -54,14 +53,34 @@
             </profile>
             <vue-metamask userMessage="msg" @onComplete="onComplete">
             </vue-metamask>
+            <div class="control">
+              <input
+                class="input"
+                type="text"
+                placeholder=" ex. 1"
+                v-model="transaction.value"
+                required
+              />
+            </div>
+            <select class="input select" v-model="transaction.receive" required>
+              <option
+                :value="receive.address"
+                v-for="(receive, index) in addressReceive"
+                v-bind:key="index.id"
+              >
+                [{{ receive.address }}]: [{{ receive.balance.eth }}]
+              </option>
+            </select>
+            <b-button v-on:click="sendingMetamarkTransaction">Send</b-button>
           </div>
         </div>
       </div>
     </section>
   </div>
 </template>
-/*eslint-disable */
+
 <script>
+/*eslint-disable */
 import VueMetamask from "vue-metamask";
 import Web3 from "web3/dist/web3.min.js";
 import web3Service from "@/services/web3.js";
@@ -98,7 +117,7 @@ export default {
       addressReceive: [],
       transaction: {
         receive: null,
-        value: 0,
+        value: "",
         gasPrice: 100000, //1000000000
         gas: 100000,
       },
@@ -189,6 +208,38 @@ export default {
     },
     onComplete(data) {
       console.log("data:", data);
+    },
+    async sendingMetamarkTransaction() {
+      const weiUtil = "femtoether";
+      const { utils, eth } = this.web3;
+      const { publicAddress } = this.wallet;
+      const { value, gasPrice, gas, receive } = this.transaction;
+      const transactionParameters = {
+        from: ethereum.selectedAddress,
+        to: receive,
+        value: utils.toHex(utils.toWei(value, "ether")),
+        gasPrice: utils.toHex(gasPrice),
+        gas: utils.toHex(gas),
+        nonce: "0x00",
+      };
+      //0x0Fa5190FF566b506D299557Bf2D028BdbE4a9ac4
+      console.log(
+        "transactionParameters ::==" + JSON.stringify(transactionParameters)
+      );
+      //return
+      try {
+        //const txHash = await eth.sendTransaction(transactionParameters)
+        const txHash = await ethereum.request({
+          method: "eth_sendTransaction",
+          params: [transactionParameters],
+        });
+        if (txHash) {
+          await this.getAccountInfo();
+          console.log("success!!!");
+        }
+      } catch (error) {
+        console.log("error ::==", error);
+      }
     },
   },
   created() {
