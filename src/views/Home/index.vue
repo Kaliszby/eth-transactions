@@ -32,6 +32,19 @@
             </b-button>
           </div>
         </div>
+        <div>asd</div>
+        <div
+          class="columns is-multiline is-mobile"
+          v-if="metaTabActive == 'address'"
+        >
+          <div
+            class="column is-one-quarter"
+            v-for="(receive, index) in addressReceive"
+            :key="index"
+          >
+            <wallet :wallet="receive"></wallet>
+          </div>
+        </div>
         <div class="columns" v-if="metaTabActive == 'transaction'">
           <div class="column">
             <profile
@@ -39,24 +52,31 @@
               :balance="wallet.balance.eth"
             >
             </profile>
+            <vue-metamask userMessage="msg" @onComplete="onComplete">
+            </vue-metamask>
           </div>
         </div>
       </div>
     </section>
   </div>
 </template>
-
+/*eslint-disable */
 <script>
+import VueMetamask from "vue-metamask";
 import Web3 from "web3/dist/web3.min.js";
 import web3Service from "@/services/web3.js";
 import profile from "@/components/profile.vue";
+import wallet from "@/components/wallet.vue";
 export default {
   name: "home",
   components: {
     profile,
+    wallet,
+    VueMetamask,
   },
   data() {
     return {
+      msg: "This is demo net work",
       metamarkStatus: "CONNECTION_REFUSED",
       personal: {},
       wallet: { publicAddress: "", balance: { wei: 0, eth: 0 } },
@@ -83,6 +103,7 @@ export default {
         gas: 100000,
       },
       web3: null,
+      accounts: [],
     };
   },
   methods: {
@@ -147,6 +168,9 @@ export default {
         console.log("this.wallet ::==" + JSON.stringify(this.wallet));
       }
     },
+    // async getAccount() {
+    //   ethereum.request({ method: "eth_requestAccounts" });
+    // },
     mappingBalance(receives) {
       const { utils } = this.web3;
       const mapper = (receives || []).map(async (address, index) => {
@@ -162,6 +186,9 @@ export default {
       });
       console.log("mapper ::==", mapper);
       return Promise.all(mapper);
+    },
+    onComplete(data) {
+      console.log("data:", data);
     },
   },
   created() {
